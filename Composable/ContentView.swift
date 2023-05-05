@@ -35,6 +35,18 @@ struct ContentView: View {
                 .alert(isPresented: viewStore.binding(get: { $0.limitReached }, send: .alertDismissed)) {
                     Alert(title: Text("Limit reached."))
                 }
+                
+                Button("GET QUOTE") {
+                    viewStore.send(.quotePressed)
+                }
+                .padding(.top, 50)
+
+                ScrollView {
+                    Text(viewStore.numberQuoteMessage ?? "")
+                }
+                .frame(maxHeight: 200)
+                .padding(.top, 20)
+
             }
             .padding()
         }
@@ -60,9 +72,14 @@ struct Stepper: ReducerProtocol {
         case add
         case subtract
         case alertDismissed
+        
+        case quotePressed
+        case numberQuoteResponse(TaskResult<String>)
     }
 
     struct State: Equatable {
+        var numberQuoteMessage: String?
+
         var startTime = ""
         var elapsedTime = 0
         var limitReached = false
@@ -90,16 +107,62 @@ struct Stepper: ReducerProtocol {
         case .alertDismissed:
             state.limitReached = false
             return .none
+        case .quotePressed:
+            return .task { [number = state.elapsedTime] in
+                await .numberQuoteResponse(
+                    TaskResult {
+                        String(
+                            decoding: try await URLSession.shared
+                                .data(from: URL(string: "http://numbersapi.com/\(number)/trivia")!).0,
+                            as: UTF8.self
+                        )
+                    }
+                )
+            }
+        case let .numberQuoteResponse(.success(beer)):
+            state.numberQuoteMessage = beer
+            return .none
+        case .numberQuoteResponse(.failure(_)):
+            state.numberQuoteMessage = "Could not load a number beer :()"
+            return .none
         }
     }
 
     private func checkLimits( state: inout State) {
-        if state.elapsedTime > 10 {
-            state.elapsedTime = 10
+        let limit = 10
+
+        if state.elapsedTime > limit {
+            state.elapsedTime = limit
             state.limitReached = true
         } else if state.elapsedTime < 0 {
             state.elapsedTime = 0
             state.limitReached = true
         }
+    }
+}
+
+
+
+struct Brewery: Codable, Equatable {
+    var id, name, breweryType, address1: String?
+    var address2, address3: String?
+    var city, stateProvince, postalCode, country: String?
+    var longitude, latitude: String?
+    var phone: String?
+    var websiteURL: String?
+    var state, street: String?
+    
+    enum CodingKeys: String, CodingKey {
+        case id, name
+        case breweryType = "brewery_type"
+        case address1 = "address_1"
+        case address2 = "address_2"
+        case address3 = "address_3"
+        case city
+        case stateProvince = "state_province"
+        case postalCode = "postal_code"
+        case country, longitude, latitude, phone
+        case websiteURL = "website_url"
+        case state, street
     }
 }
