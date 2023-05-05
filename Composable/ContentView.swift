@@ -140,29 +140,3 @@ struct Stepper: ReducerProtocol {
         }
     }
 }
-
-
-
-struct Brewery: Codable, Equatable {
-    var id, name, breweryType, address1: String?
-    var address2, address3: String?
-    var city, stateProvince, postalCode, country: String?
-    var longitude, latitude: String?
-    var phone: String?
-    var websiteURL: String?
-    var state, street: String?
-    
-    enum CodingKeys: String, CodingKey {
-        case id, name
-        case breweryType = "brewery_type"
-        case address1 = "address_1"
-        case address2 = "address_2"
-        case address3 = "address_3"
-        case city
-        case stateProvince = "state_province"
-        case postalCode = "postal_code"
-        case country, longitude, latitude, phone
-        case websiteURL = "website_url"
-        case state, street
-    }
-}
