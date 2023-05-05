@@ -15,34 +15,53 @@ struct ContentView: View {
     var body: some View {
         WithViewStore(self.store, observe: { $0 }) { viewStore in
             VStack {
-                TextField("[Initial value]", text: viewStore.binding(get: { $0.startTime }, send: Stepper.Action.indexChanged))
+                TextField("[optional value]", text: viewStore.binding(get: { $0.startTime }, send: Stepper.Action.indexChanged))
                     .multilineTextAlignment(.center)
-                    .font(.largeTitle)
-                    .background(Color.gray.opacity(0.5))
-                    .padding()
+                    .font(.title)
+                    .background(Color.gray.opacity(0.2))
+                    .cornerRadius(10)
+                    .padding(.horizontal, 20)
 
                 HStack(spacing: 20) {
-                    Button("ADD") {
-                        viewStore.send(.add)
+                    Button {
+                        viewStore.send(.subtract)
+                    } label: {
+                        Image(systemName: "minus.square.fill")
+                            .resizable()
+                            .frame(maxWidth: 50, maxHeight: 50)
+                            .tint(.red)
                     }
 
                     Text("\(viewStore.elapsedTime)")
+                        .font(.largeTitle)
 
-                    Button("SUB") {
-                        viewStore.send(.subtract)
+                    Button {
+                        viewStore.send(.add)
+                    } label: {
+                        Image(systemName: "plus.app.fill")
+                            .resizable()
+                            .frame(maxWidth: 50, maxHeight: 50)
+                            .tint(.green)
                     }
+                    
                 }
                 .alert(isPresented: viewStore.binding(get: { $0.limitReached }, send: .alertDismissed)) {
                     Alert(title: Text("Limit reached."))
                 }
                 
-                Button("GET QUOTE") {
+                Button("GET RANDOM QUOTE") {
                     viewStore.send(.quotePressed)
                 }
+                .padding()
+                .padding(.horizontal, 30)
+                .foregroundColor(.black)
+                .background(Color.orange)
+                .cornerRadius(25)
                 .padding(.top, 50)
 
                 ScrollView {
                     Text(viewStore.numberQuoteMessage ?? "")
+                        .fontWeight(.light)
                 }
                 .frame(maxHeight: 200)
                 .padding(.top, 20)
